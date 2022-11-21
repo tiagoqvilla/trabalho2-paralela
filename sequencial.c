@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "mpi.h"
+#include <mpi.h>
 
 /* CONSTANTES */
 #define GRAU 400
@@ -40,6 +40,7 @@ void erro(char *msg_erro)
 
 int main(int argc, char **argv)
 {
+  int master;
   int id; /* Identificador do processo */
   int n;  /* Numero de processos */
   int i, size;
@@ -52,72 +53,74 @@ int main(int argc, char **argv)
   MPI_Get_processor_name(hostname, &hostsize);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
   MPI_Comm_size(MPI_COMM_WORLD, &n);
-  if (id == 0)
-  {
-/* Gera os coeficientes do polinomio */
-#pragma omp parallel for
+
+  if (id == master) {
+    /* Gera os coeficientes do polinomio */
+    #pragma omp parallel for
     for (i = 0; i <= GRAU; ++i)
       a[i] = (i % 3 == 0) ? -1.0 : 1.0;
 
-/* Preenche vetores par o gabarito*/
-#pragma omp parallel for
+    /* Preenche vetores para o gabarito*/
+    #pragma omp parallel for
     for (i = 0; i < TAM_MAX; ++i)
     {
       x[i] = 0.1 + 0.1 * (double)i / TAM_MAX;
       gabarito[i] = polinomio(a, GRAU, x[i]);
     }
+  }
+  
+    // MPI_Scatter(globaldata, 1, MPI_INT, &localdata, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // Master
-    //  envia por broadcast
-    // MPI_Bcast();
-    // {
-    //  - inicio
-    //  - tamanho
-    //  - CHUNK c tam valores
-    // }
+    // printf("Processor %d has data %d\n", rank, localdata);
+    // localdata *= 2;
+    // printf("Processor %d doubling the data, now has %d\n", rank, localdata);
 
-    // espera em um laço por N respostas
+    // MPI_Gather(&localdata, 1, MPI_INT, globaldata, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // substituir os n valores recebidos no vetor X?
-    // ou sla, montar o vetor y
 
-    // SEQUENCIAL - INICIO
-
+  if (id == master)
+  {
     /* Gera tabela com tamanhos e tempos */
-    for (size = TAM_INI; size <= TAM_MAX; size += TAM_INC)
-    {
+    // for (size = TAM_INI; size <= TAM_MAX; size += TAM_INC)
+    // MPI_Bcast(&a, TAM_INC, MPI_Double, master, MPI_COMM_WORLD);
+    // {
       // CALCULAR!!!
       // BCAST -> ENVIAR PARA N
-      // MPI_Bcast();
+      // {
+      //  - inicio
+      //  - tamanho
+      //  - CHUNK c tam valores
+      // }
 
+    // }
+      // espera em um laço por N respostas
       // while(1 || 1 == 1) {
       // MPI_RECV
       // Recebeu N (Processos) valores, BREAK;
       // }
 
-      /* Verificacao */
-      for (i = 0; i < size; ++i)
-      {
-        if (y[i] != gabarito[i])
-        {
-          erro("verificacao falhou!");
-        }
-      }
+      // ou sla, montar o vetor y
+
       /* Mostra tempo */
-      printf("%d %lf\n", size, tempo);
-    }
-    // SEQUENCIAL - FIM
+      // printf("%d %lf\n", size, tempo);
+      
+      /* Verificacao */
+      // for (i = 0; i < size; ++i)
+      // {
+      //   if (y[i] != gabarito[i])
+      //   {
+      //     erro("verificacao falhou!");
+      //   }
+      // }
   }
-  else
-  {
+  else {
     // Slave
     // Vai receber
     // - Inicio
     // - tamanho
     // - CHUNK = n valores X[]*
-
     // RECV
-
+    // MPI_Bcast(&a)
     // CALCULA
 
     // SEND
