@@ -1,55 +1,45 @@
-#include <stdio.h>
-#include <stdbool.h>
 #include <mpi.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-int main(int argc, char *argv[]) {
-    MPI_Comm parent, intercomm;
-    const int slaves = 2;
-    bool master;
-    int data[slaves];
-    int mydata;
-    int i, rank, root;
+int main(int argc, char **argv) {
+    int size, rank;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_get_parent(&parent);
-    master = parent == MPI_COMM_NULL;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (master) {
-        int errcodes[slaves];
-        /* spawn the slaves */
-        MPI_Comm_spawn(argv[0], MPI_ARGV_NULL, slaves, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &intercomm, errcodes);
+    int *globaldata=NULL;
+    int localdata;
 
-        /* prepare data to be scattered to the slaves */
-        for (i=0; i<slaves; i++) {
-            data[i] = i;
-        }
+    if (rank == 0) {
+        globaldata = malloc(size * sizeof(int) );
+        for (int i=0; i<size; i++)
+            globaldata[i] = 2*i+1;
 
-        /* here we assume there is only one master */
-        root = MPI_ROOT;
-    } else {
-        intercomm = parent;
-        root = 0;
+        printf("Processor %d has data: ", rank);
+        for (int i=0; i<size; i++)
+            printf("%d ", globaldata[i]);
+        printf("\n");
     }
 
-    /* scatter data from master to slaves */
-    MPI_Scatter(data, 1, MPI_INT, &my-data, 1, MPI_INT, root, intercomm);
+    MPI_Scatter(globaldata, 1, MPI_INT, &localdata, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    if (!master) {
-        /* slaves do their work */
-        mydata = mydata + 1;
+    printf("Processor %d has data %d\n", rank, localdata);
+    localdata *= 2;
+    printf("Processor %d doubling the data, now has %d\n", rank, localdata);
+
+    MPI_Gather(&localdata, 1, MPI_INT, globaldata, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        printf("Processor %d has data: ", rank);
+        for (int i=0; i<size; i++)
+            printf("%d ", globaldata[i]);
+        printf("\n");
     }
 
-    /* gather data from slaves to master */
-    MPI_Gather(&mydata, 1, MPI_INT, data, 1, MPI_INT, root, intercomm);
-
-    if (master) {
-        int i;
-        for (i=0; i<slaves; i++) {
-            printf("Slave %d returned %d\n", i, data[i]);
-        }
-    }
-
-    MPI_Comm_disconnect(&intercomm);
+    if (rank == 0)
+        free(globaldata);
 
     MPI_Finalize();
     return 0;

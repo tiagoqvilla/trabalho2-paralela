@@ -1,7 +1,7 @@
 // MestreEscravo.c (Roland Teodorowitsch; 17 out. 2019)
 #include <stdio.h>
 #include <stdlib.h>
-#include "mpi.h"
+#include <mpi.h>
 
 int main(int argc, char* argv[]) {
   int i, id, n, message;
