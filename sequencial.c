@@ -13,6 +13,7 @@
 #define TAM_MAX 10000000
 
 /* VARIAVEIS GLOBAIS */
+int master = 0;
 double x[TAM_MAX], y[TAM_MAX], gabarito[TAM_MAX];
 
 /* PROTOTIPOS */
@@ -40,7 +41,6 @@ void erro(char *msg_erro)
 
 int main(int argc, char **argv)
 {
-  int master;
   int id; /* Identificador do processo */
   int n;  /* Numero de processos */
   int i, size;
@@ -68,8 +68,32 @@ int main(int argc, char **argv)
       gabarito[i] = polinomio(a, GRAU, x[i]);
     }
   }
-  
-    // MPI_Scatter(globaldata, 1, MPI_INT, &localdata, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  // Enviar o a para todos os slaves;
+  MPI_Bcast(&a, GRAU, MPI_DOUBLE, master, MPI_COMM_WORLD);
+
+  // WIP
+  double localdata[TAM_INC];
+  MPI_Scatter(x, TAM_INC, MPI_DOUBLE, &y, GRAU, MPI_DOUBLE, master, MPI_COMM_WORLD);
+ 
+  for (i = 0; i < TAM_INC; ++i)
+      y[i] = polinomio(a, GRAU, x[i]);
+
+  MPI_Gather(&localdata, GRAU, MPI_DOUBLE, a, GRAU, MPI_DOUBLE, master, MPI_COMM_WORLD);
+  // WIP
+
+  if(id == master) {
+    /* Verificacao */
+    for (i = 0; i < size; ++i)
+    {
+      if (y[i] != gabarito[i])
+      {
+        erro("verificacao falhou!");
+      }
+    }
+  }
+
+
 
     // printf("Processor %d has data %d\n", rank, localdata);
     // localdata *= 2;
@@ -78,8 +102,8 @@ int main(int argc, char **argv)
     // MPI_Gather(&localdata, 1, MPI_INT, globaldata, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 
-  if (id == master)
-  {
+  // if (id == master)
+  // {
     /* Gera tabela com tamanhos e tempos */
     // for (size = TAM_INI; size <= TAM_MAX; size += TAM_INC)
     // MPI_Bcast(&a, TAM_INC, MPI_Double, master, MPI_COMM_WORLD);
@@ -112,8 +136,8 @@ int main(int argc, char **argv)
       //     erro("verificacao falhou!");
       //   }
       // }
-  }
-  else {
+  // }
+  // else {
     // Slave
     // Vai receber
     // - Inicio
@@ -137,7 +161,7 @@ int main(int argc, char **argv)
     // MPI_Bcast(a, tamA, MPI_Float, 0 (root), MPI_COMM_WORLD)
 
     // DEPOIS DE CALCULAR, MPI_SEND() para o ROOT o Array Calculado
-  }
+  // }
   MPI_Finalize();
   return 0;
 }
