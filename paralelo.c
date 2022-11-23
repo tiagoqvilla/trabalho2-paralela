@@ -86,7 +86,7 @@ int main(int argc, char **argv)
       // Se for o master
       tempo = -MPI_Wtime();
       // Calcula o tamanho do chunk
-      sizeBySlave = size / n;
+      sizeBySlave = size / (n - 1);
       // Para cada slave
       for (slv = 1; slv < n; ++slv)
       {
@@ -102,6 +102,8 @@ int main(int argc, char **argv)
       {
         // Recebe de algum slave o pedaço q ele calculou
         MPI_Recv(&first, 1, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+        printf("status.MPI_SOURCE: %d", status.MPI_SOURCE);
+        fflush(stdout);
         MPI_Recv(&sizeBySlave, 1, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
         MPI_Recv(&y[first], sizeBySlave, MPI_DOUBLE, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
         --slavesToGo;
@@ -135,6 +137,10 @@ int main(int argc, char **argv)
     {
       if (y[i] != gabarito[i])
       {
+        printf("Erro no i=%d\n", i);
+        printf("x[i]=%d\n", x[i]);
+        printf("y[i]=%d\n", y[i]);
+        fflush(stdout);
         erro("verificacao falhou!");
       }
     }
