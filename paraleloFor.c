@@ -88,7 +88,7 @@ int main(int argc, char **argv)
       // Calcula o tamanho do chunk
       // n = 8
       double sizedb = 1.0 * size / (n - 1);
-      sizeBySlave = ceil(sizedb);
+      sizeBySlave = (int)ceil(sizedb);
       // Para cada slave
       for (slv = 1; slv < n; ++slv)
       {
