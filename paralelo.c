@@ -138,8 +138,8 @@ int main(int argc, char **argv)
       if (y[i] != gabarito[i])
       {
         printf("Erro no i=%d\n", i);
-        printf("x[i]=%d\n", x[i]);
-        printf("y[i]=%d\n", y[i]);
+        printf("x[i]=%f\n", x[i]);
+        printf("y[i]=%f\n", y[i]);
         fflush(stdout);
         erro("verificacao falhou!");
       }
