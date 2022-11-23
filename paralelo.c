@@ -90,11 +90,16 @@ int main(int argc, char **argv)
       // Para cada slave
       for (slv = 1; slv < n; ++slv)
       {
-        // Envia para o slave slv o pedaço para ele calcular
         first = (slv - 1) * sizeBySlave;
+        int sizeCorrigido = sizeBySlave, final = (first + sizeBySlave);
+        // Cálculo da correção para o ultimo processo
+        if (final > size)
+        {
+          sizeCorrigido -= (final - size);
+        }
         MPI_Send(&first, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
-        MPI_Send(&sizeBySlave, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
-        MPI_Send(&x[first], sizeBySlave, MPI_DOUBLE, slv, tag, MPI_COMM_WORLD);
+        MPI_Send(&sizeCorrigido, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
+        MPI_Send(&x[first], sizeCorrigido, MPI_DOUBLE, slv, tag, MPI_COMM_WORLD);
       }
       // Tivemos que separar em 2 for pois o MPI_Recv tranca a thread
       int slavesToGo = n;
