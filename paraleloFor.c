@@ -87,7 +87,7 @@ int main(int argc, char **argv)
       tempo = -MPI_Wtime();
       // Calcula o tamanho do chunk
       // n = 8
-      sizeBySlave = (int) ceil(1.0 * size / (n - 1));
+      sizeBySlave = (int)ceil(1.0 * size / (n - 1));
       // Para cada slave
       for (slv = 1; slv < n; ++slv)
       {
@@ -147,6 +147,7 @@ int main(int argc, char **argv)
         printf("Erro no i=%d\n", i);
         printf("x[i]=%f\n", x[i]);
         printf("y[i]=%f\n", y[i]);
+        printf("gabarito[i]=%f\n", gabarito[i]);
         fflush(stdout);
         erro("verificacao falhou!");
       }
