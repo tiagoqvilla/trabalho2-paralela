@@ -83,6 +83,9 @@ int main(int argc, char **argv)
   {
     if (id == master)
     {
+      printf("Processo mestre iniciado, id: %d\n", id);
+      fflush(stdout);
+
       // Se for o master
       tempo = -MPI_Wtime();
       // Calcula o tamanho do chunk
@@ -112,6 +115,8 @@ int main(int argc, char **argv)
     }
     else
     {
+      printf("Processo Slave iniciado, id: %d\n", id);
+      fflush(stdout);
       // Se for algum slave:
       MPI_Recv(&first, 1, MPI_INT, master, tag, MPI_COMM_WORLD, &status);
       MPI_Recv(&sizeBySlave, 1, MPI_INT, master, tag, MPI_COMM_WORLD, &status);

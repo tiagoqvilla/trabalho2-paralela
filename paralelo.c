@@ -103,6 +103,7 @@ int main(int argc, char **argv)
         // Recebe de algum slave o pedaço q ele calculou
         MPI_Recv(&first, 1, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
         printf("descargo: %d\n", status.MPI_SOURCE);
+        fflush(stdout);
         MPI_Recv(&sizeBySlave, 1, MPI_INT, status.MPI_SOURCE, tag, MPI_COMM_WORLD, &status);
         MPI_Recv(&y[first], sizeBySlave, MPI_DOUBLE, status.MPI_SOURCE, tag, MPI_COMM_WORLD, &status);
         --slavesToGo;
