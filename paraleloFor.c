@@ -86,13 +86,16 @@ int main(int argc, char **argv)
       // Se for o master
       tempo = -MPI_Wtime();
       // Calcula o tamanho do chunk
-      sizeBySlave = ceil(size / (n - 1));
+      // n = 8
+      sizeBySlave = ceil(1.0 * size / (n - 1));
       // Para cada slave
       for (slv = 1; slv < n; ++slv)
       {
         // Envia para o slave slv o pedaço para ele calcular
         first = (slv - 1) * sizeBySlave;
         int sizeCorrigido = sizeBySlave, final = (first + sizeBySlave);
+        printf("id: %d, first: %d\n", slv, first);
+        printf("size: %d, sizeCorrigido: %d\n", sizeBySlave, sizeCorrigido);
         // Cálculo da correção para o ultimo processo
         if (final > size)
         {
