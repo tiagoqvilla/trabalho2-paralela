@@ -90,11 +90,15 @@ int main(int argc, char **argv)
       tempo = -MPI_Wtime();
       // Calcula o tamanho do chunk
       sizeBySlave = size / n;
+      printf("sizeBySlave: %d/%d = %d\n", size, n, sizeBySlave);
       // Para cada slave
+      fflush(stdout);
       for (slv = 1; slv < n; ++slv)
       {
         // Envia para o slave slv o pedaço para ele calcular
         first = (slv - 1) * sizeBySlave;
+        printf("id: %d, first: %d\n", slv, first);
+        fflush(stdout);
         MPI_Send(&first, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
         MPI_Send(&sizeBySlave, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
         MPI_Send(&x[first], sizeBySlave, MPI_DOUBLE, slv, tag, MPI_COMM_WORLD);
