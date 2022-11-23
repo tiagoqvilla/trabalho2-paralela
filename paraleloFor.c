@@ -83,22 +83,16 @@ int main(int argc, char **argv)
   {
     if (id == master)
     {
-      printf("Processo mestre iniciado, id: %d\n", id);
-      fflush(stdout);
-
       // Se for o master
       tempo = -MPI_Wtime();
       // Calcula o tamanho do chunk
       sizeBySlave = size / n;
-      printf("sizeBySlave: %d/%d = %d\n", size, n, sizeBySlave);
       // Para cada slave
       fflush(stdout);
       for (slv = 1; slv < n; ++slv)
       {
         // Envia para o slave slv o pedaço para ele calcular
         first = (slv - 1) * sizeBySlave;
-        printf("id: %d, first: %d\n", slv, first);
-        fflush(stdout);
         MPI_Send(&first, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
         MPI_Send(&sizeBySlave, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
         MPI_Send(&x[first], sizeBySlave, MPI_DOUBLE, slv, tag, MPI_COMM_WORLD);
@@ -109,7 +103,6 @@ int main(int argc, char **argv)
       {
         // Recebe de algum slave o pedaço q ele calculou
         MPI_Recv(&first, 1, MPI_INT, slv, tag, MPI_COMM_WORLD, &status);
-        printf("descargo: %d\n", status.MPI_SOURCE);
         fflush(stdout);
         MPI_Recv(&sizeBySlave, 1, MPI_INT, slv, tag, MPI_COMM_WORLD, &status);
         MPI_Recv(&y[first], sizeBySlave, MPI_DOUBLE, slv, tag, MPI_COMM_WORLD, &status);
@@ -119,12 +112,10 @@ int main(int argc, char **argv)
     }
     else
     {
-      printf("Processo Slave iniciado, id: %d\n", id);
-      fflush(stdout);
       // Se for algum slave:
       MPI_Recv(&first, 1, MPI_INT, master, tag, MPI_COMM_WORLD, &status);
       MPI_Recv(&sizeBySlave, 1, MPI_INT, master, tag, MPI_COMM_WORLD, &status);
-      MPI_Recv(&x[0], 1, MPI_DOUBLE, master, tag, MPI_COMM_WORLD, &status);
+      MPI_Recv(&x[0], sizeBySlave, MPI_DOUBLE, master, tag, MPI_COMM_WORLD, &status);
 
       // Calcula
       for (i = 0; i < sizeBySlave; ++i)
