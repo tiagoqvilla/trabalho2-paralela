@@ -94,14 +94,11 @@ int main(int argc, char **argv)
         // Envia para o slave slv o pedaço para ele calcular
         first = (slv - 1) * sizeBySlave;
         int sizeCorrigido = sizeBySlave, final = (first + sizeBySlave);
-        printf("id: %d, first: %d, final: %d\n", slv, first, final);
         // Cálculo da correção para o ultimo processo
         if (final > size)
         {
-          printf("Final > size!!!!!\n");
           sizeCorrigido -= (final - size);
         }
-        printf("size: %d, sizeBySlave: %d, sizeCorrigido: %d\n", size, sizeBySlave, sizeCorrigido);
         MPI_Send(&first, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
         MPI_Send(&sizeCorrigido, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
         MPI_Send(&x[first], sizeCorrigido, MPI_DOUBLE, slv, tag, MPI_COMM_WORLD);
@@ -140,7 +137,7 @@ int main(int argc, char **argv)
   if (id == master)
   {
     /* Verificacao */
-    for (i = 0; i < size; ++i)
+    for (i = 0; i < TAM_MAX; ++i)
     {
       if (y[i] != gabarito[i])
       {
