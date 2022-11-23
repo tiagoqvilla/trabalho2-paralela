@@ -48,20 +48,22 @@ int main(int argc, char **argv)
   int hostsize; /* Tamanho do nome do nodo */
   char hostname[MPI_MAX_PROCESSOR_NAME];
   MPI_Status status; /* Status de retorno */
+  int tag = 0;
 
   MPI_Init(&argc, &argv);
   MPI_Get_processor_name(hostname, &hostsize);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
   MPI_Comm_size(MPI_COMM_WORLD, &n);
 
-  if (id == master) {
-    /* Gera os coeficientes do polinomio */
-    #pragma omp parallel for
+  if (id == master)
+  {
+/* Gera os coeficientes do polinomio */
+#pragma omp parallel for
     for (i = 0; i <= GRAU; ++i)
       a[i] = (i % 3 == 0) ? -1.0 : 1.0;
 
-    /* Preenche vetores para o gabarito*/
-    #pragma omp parallel for
+/* Preenche vetores para o gabarito*/
+#pragma omp parallel for
     for (i = 0; i < TAM_MAX; ++i)
     {
       x[i] = 0.1 + 0.1 * (double)i / TAM_MAX;
@@ -69,20 +71,66 @@ int main(int argc, char **argv)
     }
   }
 
+  // Fica trancado até todos chegarem nessa linha (chamarem o metodo)
+  MPI_Barrier(MPI_COMM_WORLD);
+
   // Enviar o a para todos os slaves;
   MPI_Bcast(&a, GRAU, MPI_DOUBLE, master, MPI_COMM_WORLD);
 
-  // WIP
-  double localdata[TAM_INC];
-  MPI_Scatter(x, TAM_INC, MPI_DOUBLE, &y, GRAU, MPI_DOUBLE, master, MPI_COMM_WORLD);
- 
-  for (i = 0; i < TAM_INC; ++i)
-      y[i] = polinomio(a, GRAU, x[i]);
+  // INICIO - CALCULO
+  int slv, first, sizeBySlave;
+  for (size = TAM_INI; size <= TAM_MAX; size += TAM_INC)
+  {
+    if (id == master)
+    {
+      // Se for o master
+      tempo = -MPI_Wtime();
+      // Calcula o tamanho do chunk
+      sizeBySlave = size / n;
+      // Para cada slave
+      for (slv = 1; slv < n; ++slv)
+      {
+        // Envia para o slave slv o pedaço para ele calcular
+        first = (slv - 1) * sizeBySlave;
+        MPI_Send(&first, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
+        MPI_Send(&sizeBySlave, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
+        MPI_Send(&x[first], sizeBySlave, MPI_DOUBLE, slv, tag, MPI_COMM_WORLD);
+      }
+      // Tivemos que separar em 2 for pois o MPI_Recv tranca a thread
+      int slavesToGo = n;
+      while (slavesToGo > 0)
+      {
+        // Recebe de algum slave o pedaço q ele calculou
+        MPI_Recv(&first, 1, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+        printf("descargo: %d\n", status.MPI_SOURCE);
+        MPI_Recv(&sizeBySlave, 1, MPI_INT, status.MPI_SOURCE, tag, MPI_COMM_WORLD, &status);
+        MPI_Recv(&x[first], sizeBySlave, MPI_DOUBLE, status.MPI_SOURCE, tag, MPI_COMM_WORLD, &status);
+        --slavesToGo;
+      }
+      tempo += MPI_Wtime();
+      printf("%d %lf\n", size, tempo);
+    }
+    else
+    {
+      // Se for algum slave:
+      MPI_Recv(&first, 1, MPI_INT, master, tag, MPI_COMM_WORLD, &status);
+      MPI_Recv(&sizeBySlave, 1, MPI_INT, master, tag, MPI_COMM_WORLD, &status);
+      MPI_Recv(&x[0], 1, MPI_DOUBLE, master, tag, MPI_COMM_WORLD, &status);
 
-  MPI_Gather(&localdata, GRAU, MPI_DOUBLE, a, GRAU, MPI_DOUBLE, master, MPI_COMM_WORLD);
-  // WIP
+      // Calcula
+      for (i = 0; i < sizeBySlave; ++i)
+        y[i] = polinomio(a, GRAU, x[i]);
 
-  if(id == master) {
+      // Envia de volta
+      MPI_Send(&first, 1, MPI_INT, master, tag, MPI_COMM_WORLD);
+      MPI_Send(&sizeBySlave, 1, MPI_INT, master, tag, MPI_COMM_WORLD);
+      MPI_Send(&y[0], sizeBySlave, MPI_DOUBLE, master, tag, MPI_COMM_WORLD);
+    }
+  }
+  // FIM - CALCULO
+
+  if (id == master)
+  {
     /* Verificacao */
     for (i = 0; i < size; ++i)
     {
@@ -92,76 +140,6 @@ int main(int argc, char **argv)
       }
     }
   }
-
-
-
-    // printf("Processor %d has data %d\n", rank, localdata);
-    // localdata *= 2;
-    // printf("Processor %d doubling the data, now has %d\n", rank, localdata);
-
-    // MPI_Gather(&localdata, 1, MPI_INT, globaldata, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-
-  // if (id == master)
-  // {
-    /* Gera tabela com tamanhos e tempos */
-    // for (size = TAM_INI; size <= TAM_MAX; size += TAM_INC)
-    // MPI_Bcast(&a, TAM_INC, MPI_Double, master, MPI_COMM_WORLD);
-    // {
-      // CALCULAR!!!
-      // BCAST -> ENVIAR PARA N
-      // {
-      //  - inicio
-      //  - tamanho
-      //  - CHUNK c tam valores
-      // }
-
-    // }
-      // espera em um laço por N respostas
-      // while(1 || 1 == 1) {
-      // MPI_RECV
-      // Recebeu N (Processos) valores, BREAK;
-      // }
-
-      // ou sla, montar o vetor y
-
-      /* Mostra tempo */
-      // printf("%d %lf\n", size, tempo);
-      
-      /* Verificacao */
-      // for (i = 0; i < size; ++i)
-      // {
-      //   if (y[i] != gabarito[i])
-      //   {
-      //     erro("verificacao falhou!");
-      //   }
-      // }
-  // }
-  // else {
-    // Slave
-    // Vai receber
-    // - Inicio
-    // - tamanho
-    // - CHUNK = n valores X[]*
-    // RECV
-    // MPI_Bcast(&a)
-    // CALCULA
-
-    // SEND
-    // - inicio
-    // - tamanho
-    // - chunk y
-
-    /* Calcula (Sequencial)*/
-    // tempo = -MPI_Wtime();
-    // for (i = 0; i < size; ++i)
-    //   y[i] = polinomio(a, GRAU, x[i]);
-    // tempo += MPI_Wtime();
-
-    // MPI_Bcast(a, tamA, MPI_Float, 0 (root), MPI_COMM_WORLD)
-
-    // DEPOIS DE CALCULAR, MPI_SEND() para o ROOT o Array Calculado
-  // }
   MPI_Finalize();
   return 0;
 }
