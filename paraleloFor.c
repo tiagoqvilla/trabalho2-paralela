@@ -87,8 +87,7 @@ int main(int argc, char **argv)
       tempo = -MPI_Wtime();
       // Calcula o tamanho do chunk
       // n = 8
-      double sizedb = (double)size / (n - 1);
-      sizeBySlave = (int)ceil(sizedb);
+      sizeBySlave = (int) ceil(1.0 * size / (n - 1));
       // Para cada slave
       for (slv = 1; slv < n; ++slv)
       {
@@ -96,12 +95,13 @@ int main(int argc, char **argv)
         first = (slv - 1) * sizeBySlave;
         int sizeCorrigido = sizeBySlave, final = (first + sizeBySlave);
         printf("id: %d, first: %d, final: %d\n", slv, first, final);
-        printf("size: %d, sizeCorrigido: %d\n", sizeBySlave, sizeCorrigido);
         // Cálculo da correção para o ultimo processo
         if (final > size)
         {
+          printf("Final > size!!!!!\n");
           sizeCorrigido -= (final - size);
         }
+        printf("size: %d, sizeBySlave: %d, sizeCorrigido: %d\n", size, sizeBySlave, sizeCorrigido);
         MPI_Send(&first, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
         MPI_Send(&sizeCorrigido, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
         MPI_Send(&x[first], sizeCorrigido, MPI_DOUBLE, slv, tag, MPI_COMM_WORLD);
