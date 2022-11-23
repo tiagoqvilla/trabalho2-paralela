@@ -88,11 +88,12 @@ int main(int argc, char **argv)
       // Calcula o tamanho do chunk
       sizeBySlave = size / n;
       // Para cada slave
-      fflush(stdout);
+      printf("MASTER sizeBySlave: %d\n", sizeBySlave);
       for (slv = 1; slv < n; ++slv)
       {
         // Envia para o slave slv o pedaço para ele calcular
         first = (slv - 1) * sizeBySlave;
+        printf("MASTER: id %d, first: %d\n", id, first);
         MPI_Send(&first, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
         MPI_Send(&sizeBySlave, 1, MPI_INT, slv, tag, MPI_COMM_WORLD);
         MPI_Send(&x[first], sizeBySlave, MPI_DOUBLE, slv, tag, MPI_COMM_WORLD);
@@ -103,7 +104,6 @@ int main(int argc, char **argv)
       {
         // Recebe de algum slave o pedaço q ele calculou
         MPI_Recv(&first, 1, MPI_INT, slv, tag, MPI_COMM_WORLD, &status);
-        fflush(stdout);
         MPI_Recv(&sizeBySlave, 1, MPI_INT, slv, tag, MPI_COMM_WORLD, &status);
         MPI_Recv(&y[first], sizeBySlave, MPI_DOUBLE, slv, tag, MPI_COMM_WORLD, &status);
       }
@@ -116,6 +116,9 @@ int main(int argc, char **argv)
       MPI_Recv(&first, 1, MPI_INT, master, tag, MPI_COMM_WORLD, &status);
       MPI_Recv(&sizeBySlave, 1, MPI_INT, master, tag, MPI_COMM_WORLD, &status);
       MPI_Recv(&x[0], sizeBySlave, MPI_DOUBLE, master, tag, MPI_COMM_WORLD, &status);
+      printf("id %d, first: %d\n", id, first);
+      printf("sizeBySlave: %d\n", sizeBySlave);
+      fflush(stdout);
 
       // Calcula
       for (i = 0; i < sizeBySlave; ++i)
@@ -136,6 +139,8 @@ int main(int argc, char **argv)
     {
       if (y[i] != gabarito[i])
       {
+        printf("Erro no i=%d\n", i);
+        fflush(stdout);
         erro("verificacao falhou!");
       }
     }
