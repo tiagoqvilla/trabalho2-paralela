@@ -114,6 +114,19 @@ int main(int argc, char **argv)
       }
       tempo += MPI_Wtime();
       printf("%d %lf\n", size, tempo);
+      /* Verificacao */
+      for (i = 0; i < size; ++i)
+      {
+        if (y[i] != gabarito[i])
+        {
+          printf("Erro no i=%d\n", i);
+          printf("x[i]=%f\n", x[i]);
+          printf("y[i]=%f\n", y[i]);
+          printf("gabarito[i]=%f\n", gabarito[i]);
+          fflush(stdout);
+          erro("verificacao falhou!");
+        }
+      }
     }
     else
     {
@@ -133,23 +146,6 @@ int main(int argc, char **argv)
     }
   }
   // FIM - CALCULO
-
-  if (id == master)
-  {
-    /* Verificacao */
-    for (i = 0; i < TAM_MAX; ++i)
-    {
-      if (y[i] != gabarito[i])
-      {
-        printf("Erro no i=%d\n", i);
-        printf("x[i]=%f\n", x[i]);
-        printf("y[i]=%f\n", y[i]);
-        printf("gabarito[i]=%f\n", gabarito[i]);
-        fflush(stdout);
-        erro("verificacao falhou!");
-      }
-    }
-  }
   MPI_Finalize();
   return 0;
 }
