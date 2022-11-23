@@ -94,7 +94,7 @@ int main(int argc, char **argv)
         // Envia para o slave slv o pedaço para ele calcular
         first = (slv - 1) * sizeBySlave;
         int sizeCorrigido = sizeBySlave, final = (first + sizeBySlave);
-        printf("id: %d, first: %d\n", slv, first);
+        printf("id: %d, first: %d, final: %d\n", slv, first, final);
         printf("size: %d, sizeCorrigido: %d\n", sizeBySlave, sizeCorrigido);
         // Cálculo da correção para o ultimo processo
         if (final > size)
