@@ -1,4 +1,4 @@
-/* paralelo.c (Gustavo e Tiago) */
+/* paraleloFor.c (Gustavo e Tiago) */
 
 #include <stdio.h>
 #include <stdlib.h>
